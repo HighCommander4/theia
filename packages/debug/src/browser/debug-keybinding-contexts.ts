@@ -18,10 +18,15 @@ import { injectable, inject } from 'inversify';
 import { KeybindingContext } from '@theia/core/lib/browser';
 import { DebugSessionManager } from './debug-session-manager';
 import { DebugState } from './debug-session';
+import { DebugEditorService } from './editor/debug-editor-service';
 
 export namespace DebugKeybindingContexts {
 
     export const inDebugMode = 'inDebugMode';
+
+    export const inBreakpointWidget = 'inBreakpointWidget';
+
+    export const inStrictBreakpointWidget = 'inStrictBreakpointWidget';
 
 }
 
@@ -35,6 +40,33 @@ export class InDebugModeContext implements KeybindingContext {
 
     isEnabled(): boolean {
         return this.manager.state > DebugState.Inactive;
+    }
+
+}
+
+@injectable()
+export class InBreakpointWidgetContext implements KeybindingContext {
+
+    readonly id: string = DebugKeybindingContexts.inBreakpointWidget;
+
+    @inject(DebugEditorService)
+    protected readonly editors: DebugEditorService;
+
+    isEnabled(): boolean {
+        const model = this.editors.model;
+        return !!model && !!model.breakpointWidget.position && !model.editor.isFocused();
+    }
+
+}
+
+@injectable()
+export class InStrictBreakpointWidgetContext extends InBreakpointWidgetContext {
+
+    readonly id: string = DebugKeybindingContexts.inStrictBreakpointWidget;
+
+    isEnabled(): boolean {
+        const model = this.editors.model;
+        return !!model && !!model.breakpointWidget.position && (!model.editor.isFocused() || model.editor.isFocused({ strict: true }));
     }
 
 }

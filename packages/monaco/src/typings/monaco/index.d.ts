@@ -213,6 +213,7 @@ declare module monaco.editor {
         fontWeight?: string;
         textDecoration?: string;
         color?: string | ThemeColor;
+        opacity?: string;
         backgroundColor?: string | ThemeColor;
 
         margin?: string;
