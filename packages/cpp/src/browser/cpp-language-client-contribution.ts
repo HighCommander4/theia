@@ -26,6 +26,8 @@ import { MessageService } from '@theia/core/lib/common/message-service';
 import { CPP_LANGUAGE_ID, CPP_LANGUAGE_NAME, HEADER_AND_SOURCE_FILE_EXTENSIONS } from '../common';
 import { CppBuildConfigurationManager, CppBuildConfiguration } from './cpp-build-configurations';
 import { CppBuildConfigurationsStatusBarElement } from './cpp-build-configurations-statusbar-element';
+import { MessageConnection } from 'vscode-jsonrpc';
+import { TypeHierarchyService } from '@theia/typehierarchy/lib/browser/typehierarchy-service';
 
 /**
  * Clangd extension to set clangd-specific "initializationOptions" in the
@@ -53,7 +55,8 @@ export class CppLanguageClientContribution extends BaseLanguageClientContributio
         @inject(Languages) protected readonly languages: Languages,
         @inject(LanguageClientFactory) protected readonly languageClientFactory: LanguageClientFactory,
         @inject(MessageService) protected readonly messageService: MessageService,
-        @inject(ILogger) protected readonly logger: ILogger
+        @inject(ILogger) protected readonly logger: ILogger,
+        @inject(TypeHierarchyService) protected readonly typeHierarchyService: TypeHierarchyService
     ) {
         super(workspace, languages, languageClientFactory);
     }
@@ -125,5 +128,11 @@ export class CppLanguageClientContribution extends BaseLanguageClientContributio
             return false;
         };
         return clientOptions;
+    }
+
+    protected createLanguageClient(connection: MessageConnection): ILanguageClient {
+      const client: ILanguageClient & Readonly<{ languageId: string }> = Object.assign(super.createLanguageClient(connection), { languageId: this.id });
+      client.registerFeatures(TypeHierarchyService.createNewFeatures(this.typeHierarchyService, client));
+      return client;
     }
 }
